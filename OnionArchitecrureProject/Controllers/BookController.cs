@@ -1,119 +1,99 @@
-﻿using AutoMapper;
-using DomainLayer.DTO.BookDtos;
-using DomainLayer.Models;
+﻿using BookLibrary.Domain.Core.DTO.BookDTOs;
 using Microsoft.AspNetCore.Mvc;
-using ServiceLayer.Service.Implementation;
-using ServiceLayer.Service.UoW;
-using Microsoft.AspNetCore.Authorization;
+using BookLibrary.Services.Interfaces.Books;
 
-namespace WebAPI_Layer.Controllers
+namespace BookLibrary.Controllers
 {
+#pragma warning disable CA2254
     [Route("api/[controller]")]
-    [Authorize]
+    //[Authorize]
     [ApiController]
     public class BookController : ControllerBase
     {
-        private IMapper _mapper;
-        private IUnitOfWork _unitOfWork;
+        private readonly IBookService _bookService;
         private readonly ILogger<BookController> _logger;
 
-        public BookController(IMapper mapper, IUnitOfWork unitOfWork, ILogger<BookController> logger)
+        public BookController(IBookService bookService, ILogger<BookController> logger)
         {
-            _mapper = mapper;
-            _unitOfWork = unitOfWork;
+            _bookService = bookService;
             _logger = logger;
         }
 
         [HttpGet]
-        [Route("getall")]
-        public async Task<IActionResult> GetAllBooks()
+        [Route("GetAll")]
+        public async Task<IActionResult> GetAllBooksAsync()
         {
-            var repository = _unitOfWork.GetRepository<Book>() as BookService;
+            var response = await _bookService.GetAllBooksAsync();
 
-            var books = await Task.Run(() => repository.GetAllBooks());
-
-            var request = new AllBooksDto
+            if (response.Result.Succeeded)
             {
-                BookAmount = books.Count(),
-                Books = _mapper.Map<List<Book>, List<BookView>>(books.ToList())
-            };
+                _logger.LogDebug("Selected all books");
 
-            _logger.LogDebug("Произведена выборка всех книг");
+                return Ok(response);
+            }
 
-            return StatusCode(200, request);
+            return BadRequest();
         }
 
         [HttpGet]
-        [Route("get")]
-        public async Task<IActionResult> GetBook(int id)
+        [Route("Get")]
+        public async Task<IActionResult> GetBookAsync(int id)
         {
-            var repository = _unitOfWork.GetRepository<Book>() as BookService;
+            var response = await _bookService.GetBookAsync(id);
 
-            var book = await Task.Run(() => repository.GetBookById(id));
-
-            if (book == null)
+            if (response.Result.Succeeded)
             {
-                _logger.LogError($"Ошибка: Книга с id: {id} не найдена. Проверьте корректность ввода!");
-                return StatusCode(400, $"Ошибка: Книга с id: {id} не найдена. Проверьте корректность ввода!");
+                _logger.LogDebug($"The selection of books was successful. Selected book with Id: {id}");
+
+                return Ok(response);
             }
 
-            var request = _mapper.Map<Book, BookDto>(book);
-
-            _logger.LogDebug("Выборка прошла успешно. Выбрана книга: " + book.Title);
-
-            return StatusCode(200, request);
+            return BadRequest();
         }
 
-        [HttpPost("add")]
-        public async Task<IActionResult> AddBook(AddBookDto book)
+        [HttpPost("Add")]
+        public async Task<IActionResult> AddBookAsync(AddBookDto book)
         {
-            var repository = _unitOfWork.GetRepository<Book>() as BookService;
-            var newBook = _mapper.Map<AddBookDto, Book>(book);
+            var response = await _bookService.AddBookAsync(book);
 
-            await Task.Run(() => repository.AddBook(newBook));
+            if (response.Result.Succeeded)
+            {
+                _logger.LogDebug($"Book: {book.Title} added successfully.");
 
-            _unitOfWork.SaveChanges();
+                return Ok($"Book: {book.Title} added successfully.");
+            }
 
-            _logger.LogDebug($"Книга: {book.Title} добавлена успешно.");
-
-            return StatusCode(200, $"Книга: {book.Title} добавлена успешно.");
+            return BadRequest();
         }
 
-        [HttpPut("edit")]
-        public async Task<IActionResult> UpdateBook(EditBookDto book)
+        [HttpPut("Edit")]
+        public async Task<IActionResult> UpdateBookAsync(EditBookDto book)
         {
-            var repository = _unitOfWork.GetRepository<Book>() as BookService;
-            var editBook = _mapper.Map<EditBookDto, Book>(book);
+            var response = await _bookService.UpdateBookAsync(book);
 
-            await Task.Run(() => repository.UpdateBook(editBook));
+            if (response.Result.Succeeded)
+            {
+                _logger.LogDebug($"Book info: {book.Title} changed successfully.");
 
-            _unitOfWork.SaveChanges();
+                return Ok($"Book info: {book.Title} changed successfully.");
+            }
 
-            _logger.LogDebug($"Информация о книге: {book.Title} изменена успешно.");
-
-            return StatusCode(200, $"Информация о книге: {book.Title} изменена успешно.");
+            return BadRequest();
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DeleteBook(long id)
+        public async Task<IActionResult> DeleteBookAsync(long id)
         {
-            var repository = _unitOfWork.GetRepository<Book>() as BookService;
+            var response = await _bookService.RemoveBookAsync(id);
 
-            var book = await Task.Run(() => repository.GetBookById(id));
-
-            if (book == null)
+            if (response.Result.Succeeded)
             {
-                _logger.LogError($"Ошибка: Книга с id: {id} не найдена. Проверьте корректность ввода!");
-                return StatusCode(400, $"Ошибка: Книга с id: {id} не найдена. Проверьте корректность ввода!");
+                _logger.LogDebug($"Book with Id: {id} was successfully removed from the library.");
+
+                return Ok($"Book with id: {id} was successfully removed from the library.");
             }
 
-            await Task.Run(() => repository.RemoveBook(id));
-
-            _unitOfWork.SaveChanges();
-
-            _logger.LogDebug($"Книга: {book.Title} успешно удалена из библиотеки.");
-
-            return StatusCode(200, $"Книга: {book.Title} успешно удалена из библиотеки.");
+            return BadRequest();
         }
     }
 }

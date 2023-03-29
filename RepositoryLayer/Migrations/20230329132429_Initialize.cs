@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace RepositoryLayer.Migrations
+namespace BookLibrary.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class AddPriceColumnToOrder : Migration
+    public partial class Initialize : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,8 +17,8 @@ namespace RepositoryLayer.Migrations
                 {
                     BookId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    BookTitle = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "Macro Code"),
-                    BookAuthor = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "Macro Code"),
+                    BookTitle = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "Default Value"),
+                    BookAuthor = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "Default Value"),
                     BookPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
                 },
                 constraints: table =>
@@ -95,7 +95,7 @@ namespace RepositoryLayer.Migrations
                 {
                     OrderId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    DescriptionOrder = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "Macro Code"),
+                    DescriptionOrder = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: "Default Value"),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     DateOfOrder = table.Column<DateTime>(type: "date", nullable: false, defaultValueSql: "(getdate())"),
                     BookId = table.Column<long>(type: "bigint", nullable: false),

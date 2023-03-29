@@ -1,37 +1,34 @@
 ﻿using AutoMapper;
-using DomainLayer.DTO.UserDtos;
-using DomainLayer.Models;
-using Microsoft.AspNetCore.Authorization;
+using BookLibrary.Domain.Core.DTO.UserDTOs;
+using BookLibrary.Domain.Core.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
-namespace WebAPI_Layer.Controllers
+namespace BookLibrary.Controllers
 {
+#pragma warning disable CA2254
     [Route("api/[controller]")]
-    [Authorize]
+    //[Authorize]
     [ApiController]
     public class UserController : ControllerBase
     {
-        private IMapper _mapper;
+        private readonly IMapper _mapper;
         private readonly ILogger<UserController> _logger;
-        UserManager<ApplicationUser> _userManager;
-        SignInManager<ApplicationUser> _signInManager;
-        RoleManager<IdentityRole> _roleManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public UserController(IMapper mapper, ILogger<UserController> logger, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager)
+        public UserController(IMapper mapper, ILogger<UserController> logger, UserManager<ApplicationUser> userManager)
         {
             _mapper = mapper;
             _logger = logger;
             _userManager = userManager;
-            _signInManager = signInManager;
-            _roleManager = roleManager;
         }
 
         [HttpGet]
-        [Route("getall")]
-        public IActionResult GetAllUsers()
+        [Route("GetAll")]
+        public async Task<IActionResult> GetAllUsersAsync()
         {
-            var users = _userManager.Users.ToList();
+            var users = await _userManager.Users.ToListAsync();
 
             var request = new AllUsersDto
             {
@@ -39,36 +36,36 @@ namespace WebAPI_Layer.Controllers
                 Users = _mapper.Map<List<ApplicationUser>, List<UserView>>(users)
             };
 
-            _logger.LogDebug("Произведена выборка всех пользователей");
+            _logger.LogDebug("All users have been sampled.");
 
-            return StatusCode(200, request);
+            return Ok(request);
         }
 
         [HttpGet]
-        [Route("get")]
-        public async Task<IActionResult> GetUser(string email)
+        [Route("Get")]
+        public async Task<IActionResult> GetUserAsync(string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
 
             if (user == null)
             {
-                _logger.LogError($"Ошибка: Пользователь с данным id не найден. Проверьте корректность ввода!");
-                return StatusCode(400, $"Ошибка: Пользователь с данным id не найден. Проверьте корректность ввода!");
+                _logger.LogError("Error: User with given id was not found. Check your input!");
+                return BadRequest("Error: User with given id was not found. Check your input!");
             }
 
             var request = _mapper.Map<ApplicationUser, GetUserDto>(user);
 
-            return StatusCode(200, request);
+            return Ok(request);
         }
 
-        [HttpPatch("edit")]
-        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserDto model)
+        [HttpPatch("Edit")]
+        public async Task<IActionResult> UpdateUserAsync([FromBody] UpdateUserDto model)
         {
             ApplicationUser applicationUser = await _userManager.FindByEmailAsync(model.Email);
             if (applicationUser == null)
             {
-                _logger.LogError($"Ошибка: Пользователь: {model.Email} не зарегестрирован. Сначало пройдите регистрацию!");
-                return StatusCode(400, $"Ошибка: Пользователь: {model.Email} не зарегестрирован. Сначало пройдите регистрацию!");
+                _logger.LogError($"Error: User: {model.Email} is not registered. Please register first!");
+                return BadRequest($"Error: User: {model.Email} is not registered. Please register first!");
             }
 
             applicationUser.FirstName = model.FirstName;
@@ -78,22 +75,22 @@ namespace WebAPI_Layer.Controllers
 
             await _userManager.UpdateAsync(applicationUser);
 
-            return StatusCode(200, $"Информация о пользователе: {model.FirstName} {model.LastName}, обновлена!");
+            return Ok($"User info: {model.FirstName} {model.LastName}, updated!");
         }
 
-        [HttpDelete("delete")]
-        public async Task<IActionResult> DeleteUser(string email)
+        [HttpDelete("Delete")]
+        public async Task<IActionResult> DeleteUserAsync(string email)
         {
             ApplicationUser applicationUser = await _userManager.FindByEmailAsync(email);
             if (applicationUser == null)
             {
-                _logger.LogError($"Ошибка: Пользователь {applicationUser.FirstName} {applicationUser.LastName} не существует!");
-                return StatusCode(400, $"Ошибка: Пользователь {applicationUser.FirstName} {applicationUser.LastName} не существует!");
+                _logger.LogError($"Error: User {applicationUser.FirstName} {applicationUser.LastName} does not exist!");
+                return Ok($"Error: User {applicationUser.FirstName} {applicationUser.LastName} does not exist!");
             }
 
             await _userManager.DeleteAsync(applicationUser);
 
-            return StatusCode(200, $"Пользователь: {applicationUser.FirstName} {applicationUser.LastName} удален!");
+            return Ok($"User: {applicationUser.FirstName} {applicationUser.LastName} deleted successfully!");
         }
     }
 }

@@ -1,108 +1,71 @@
-﻿using AutoMapper;
-using DomainLayer.DTO.OrderDtos;
-using DomainLayer.Models;
-using Microsoft.AspNetCore.Authorization;
+﻿using BookLibrary.Domain.Core.DTO.OrderDTOs;
+using BookLibrary.Domain.Core.Models;
+using BookLibrary.Services.Interfaces.Orders;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using ServiceLayer.Service.Implementation;
-using ServiceLayer.Service.UoW;
-using static IdentityServer4.Models.IdentityResources;
 
-namespace WebAPI_Layer.Controllers
+namespace BookLibrary.Controllers
 {
+#pragma warning disable CA2254
     [Route("api/[controller]")]
-    [Authorize]
+    //[Authorize]
     [ApiController]
     public class OrderController : ControllerBase
     {
-        private IMapper _mapper;
-        private IUnitOfWork _unitOfWork;
+        private readonly IOrderService _orderService;
         private readonly ILogger<BookController> _logger;
-        UserManager<ApplicationUser> _userManager;
 
-        public OrderController(IMapper mapper, IUnitOfWork unitOfWork, ILogger<BookController> logger, UserManager<ApplicationUser> userManager)
+        public OrderController(IOrderService orderService, ILogger<BookController> logger)
         {
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
+            _orderService = orderService;
             _logger = logger;
-            _userManager = userManager;
         }
 
         [HttpGet]
-        [Route("getall")]
-        public async Task<IActionResult> GetAllOrders()
+        [Route("GetAll")]
+        public async Task<IActionResult> GetAllOrdersAsync()
         {
-            var repository = _unitOfWork.GetRepository<Order>() as OrderService;
+            var response = await _orderService.GetAllOrdersAsync();
 
-            var orders = await Task.Run(() => repository.GetAllOrders());
-
-            var request = new AllOrdersDto
+            if (response.Result.Succeeded)
             {
-                OrderAmount = orders.Count(),
-                Orders = _mapper.Map<List<Order>, List<OrderView>>(orders.ToList())
-            };
+                _logger.LogDebug("Selected all orders.");
 
-            _logger.LogDebug("Произведена выборка всех заказов");
+                return Ok(response);
+            }
 
-            return StatusCode(200, request);
+            return BadRequest();
         }
 
         [HttpGet]
-        [Route("get")]
-        public async Task<IActionResult> GetOrder(int id)
+        [Route("Get")]
+        public async Task<IActionResult> GetOrderAsync(int id)
         {
-            var repository = _unitOfWork.GetRepository<Order>() as OrderService;
+            var response = await _orderService.GetOrderAsync(id);
 
-            var order = await Task.Run(() => repository.GetOrderById(id));
-
-            if (order == null)
+            if (response.Result.Succeeded)
             {
-                _logger.LogError($"Ошибка: Заказ с id: {id} не найден. Проверьте корректность ввода!");
-                return StatusCode(400, $"Ошибка: Заказ с id: {id} не найден. Проверьте корректность ввода!");
+                _logger.LogDebug($"Order fetching was successful. Selected order with Id: {id}.");
+
+                return Ok(response);
             }
 
-            var request = _mapper.Map<Order, OrderDto>(order);
-
-            _logger.LogDebug("Выборка прошла успешно. Выбран заказ с id: " + order.OrderId);
-
-            return StatusCode(200, request);
+            return BadRequest();
         }
 
-        [HttpPost("add")]
-        public async Task<IActionResult> AddOrder(AddOrderDto addOrder)
+        [HttpPost("Add")]
+        public async Task<IActionResult> AddOrderAsync(AddOrderDto order)
         {
-            var orderRep = _unitOfWork.GetRepository<Order>() as OrderService;
-            var bookRep = _unitOfWork.GetRepository<Book>() as BookService;
+            var response = await _orderService.AddOrderAsync(order);
 
-            var book = await Task.Run(() => bookRep.GetBookById(addOrder.BookId));
-
-            if (book == null)
+            if (response.Result.Succeeded)
             {
-                _logger.LogError($"Ошибка: Книга с id: {addOrder.BookId} не найдена. Проверьте корректность ввода!");
-                return StatusCode(400, $"Ошибка: Книга с id: {addOrder.BookId} не найдена. Проверьте корректность ввода!");
+                _logger.LogDebug("Order added successfully.");
+
+                return Ok("Order added successfully.");
             }
 
-            var user = await _userManager.FindByEmailAsync(addOrder.UserEmail);
-
-            if (user == null)
-                return BadRequest();
-
-            var newOrder = new Order()
-            {
-                Description = $"Order: {book.Author} - {book.Title}",
-                Price = book.Price,
-                BookId = addOrder.BookId,
-                ApplicationUserId = user.Id,
-            };
-
-
-            await Task.Run(() => orderRep.AddOrder(newOrder));
-
-            _unitOfWork.SaveChanges();
-
-            _logger.LogDebug($"Заказ на книгу: {book.Author} - {book.Title} : {DateTime.Now.ToShortDateString()} добвлен успешно.");
-
-            return StatusCode(200, $"Заказ на книгу: {book.Author} - {book.Title} : {DateTime.Now.ToShortDateString()} добвлен успешно.");
+            return BadRequest();
         }
     }
 }

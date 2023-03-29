@@ -1,23 +1,26 @@
-using DomainLayer.Models;
-using Microsoft.EntityFrameworkCore;
-using RepositoryLayer;
-using ServiceLayer.Service.Implementation;
-using System.Reflection;
-using IdentityServer4.Models;
-using IdentityServer4.Test;
+#pragma warning disable CA1825
+using BookLibrary;
+using BookLibrary.Domain.Core.Models;
+using BookLibrary.Domain.Interfaces.Books;
+using BookLibrary.Domain.Interfaces.Orders;
+using BookLibrary.Infrastructure.Business.Books;
+using BookLibrary.Infrastructure.Business.Orders;
+using BookLibrary.Infrastructure.Data;
+using BookLibrary.Infrastructure.Data.Repositories;
+using BookLibrary.Services.Interfaces.Books;
+using BookLibrary.Services.Interfaces.Orders;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.OpenApi.Models;
-using NLog;
-using NLog.Web;
-using WebAPI_Layer;
-using WebAPI_Layer.Extensions;
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using Microsoft.OpenApi.Models;
+using NLog.Web;
 using Swashbuckle.AspNetCore.Filters;
+using System.Reflection;
+using System.Text;
 
 var logger = NLog.Web.NLogBuilder.ConfigureNLog("NLog.config").GetCurrentClassLogger();
+
 try
 {
     var builder = WebApplication.CreateBuilder(args);
@@ -26,19 +29,19 @@ try
 
     // Add services to the container.
     builder.Services.AddDbContext<AppDbContext>(con => con.UseSqlServer(connection))
-        .AddUnitOfWork()
-        .AddCustomRepository<Book, BookService>()
-        .AddCustomRepository<ApplicationUser, UserService>()
-        .AddCustomRepository<Order, OrderService>();
+        .AddTransient<IBookRepository, BookRepository>()
+        .AddTransient<IBookService, BookService>()
+        .AddTransient<IOrderRepository, OrderRepository>()
+        .AddTransient<IOrderService, OrderService>();
 
-    builder.Services.AddIdentity<ApplicationUser, IdentityRole>(config => 
+    builder.Services.AddIdentity<ApplicationUser, IdentityRole>(config =>
     {
         config.Password.RequiredLength = 4;
         config.Password.RequireDigit = false;
         config.Password.RequireNonAlphanumeric = false;
         config.Password.RequireUppercase = false;
-        config.Password.RequireLowercase = false;    
-    })       
+        config.Password.RequireLowercase = false;
+    })
         .AddEntityFrameworkStores<AppDbContext>()
         .AddDefaultTokenProviders();
 
@@ -56,7 +59,7 @@ try
     builder.Services.ConfigureApplicationCookie(config =>
     {
         config.Cookie.Name = "BookLibrary.Identity.Cookie";
-        config.LoginPath = "/Auth/Login";
+        config.LoginPath = "/Auth/LoginAsync";
         config.LogoutPath = "/Auth/Logout";
     });
 
@@ -73,13 +76,13 @@ try
             options.RequireHttpsMetadata = false;
             options.TokenValidationParameters = new TokenValidationParameters()
             {
-               ValidateIssuer = true,
-               ValidateAudience = true,
-               ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
-               ValidAudience = builder.Configuration["JWT:ValidAudience"],
-               IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:SecretKey"]))
-            };                       
-        });            
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
+                ValidAudience = builder.Configuration["JWT:ValidAudience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:SecretKey"]))
+            };
+        });
 
     builder.Services.AddSwaggerGen(c =>
     {
@@ -121,7 +124,6 @@ try
 
     builder.Services.AddSwaggerExamplesFromAssemblyOf<Program>();
 
-
     builder.Logging.ClearProviders();
     builder.Host.UseNLog();
 
@@ -144,7 +146,7 @@ try
 
     app.MapControllers();
 
-    // При старте проверяем создана ли база.
+    // At startup, we check whether the database has been created
     using (var scope = app.Services.CreateScope())
     {
         var serviceProvider = scope.ServiceProvider;
@@ -164,7 +166,7 @@ try
 catch (Exception e)
 {
     logger.Error(e);
-    throw (e);
+    throw new Exception(e.Message);
 }
 finally
 {

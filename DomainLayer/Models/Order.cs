@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace DomainLayer.Models
+﻿namespace BookLibrary.Domain.Core.Models
 {
     public class Order
     {
@@ -10,5 +8,6 @@ namespace DomainLayer.Models
         public DateTime DateOfOrder { get; set; }
         public long BookId { get; set; }
         public string ApplicationUserId { get; set; }
+        public ApplicationUser User { get; set; }
     }
 }

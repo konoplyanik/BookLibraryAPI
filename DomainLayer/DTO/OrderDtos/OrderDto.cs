@@ -1,4 +1,4 @@
-﻿namespace DomainLayer.DTO.OrderDtos
+﻿namespace BookLibrary.Domain.Core.DTO.OrderDTOs
 {
     public class OrderDto
     {

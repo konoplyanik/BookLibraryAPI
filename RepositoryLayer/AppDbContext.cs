@@ -1,16 +1,14 @@
-﻿using DomainLayer.Models;
+﻿using BookLibrary.Domain.Core.Models;
+using BookLibrary.Infrastructure.Data.Configurations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace RepositoryLayer
+namespace BookLibrary.Infrastructure.Data
 {
     public class AppDbContext : IdentityDbContext<ApplicationUser>
     {
-        public AppDbContext(DbContextOptions<AppDbContext> con) : base(con)
-        {
-
-        }
+        public AppDbContext(DbContextOptions<AppDbContext> con) : base(con) { }
 
         public DbSet<Book> Books { get; set; }
         public DbSet<Order> Orders { get; set; }
@@ -34,7 +32,8 @@ namespace RepositoryLayer
 
             modelBuilder.ApplyConfiguration(new AppUserConfiguration());
 
-            FluentAPIConfigurations.FluentAPIConfig(modelBuilder);
+            BookConfiguration.SetBookConfiguration(modelBuilder);
+            OrderConfiguration.SetOrderConfiguration(modelBuilder);
         }
     }
 }

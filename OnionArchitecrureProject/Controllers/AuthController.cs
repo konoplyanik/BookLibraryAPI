@@ -1,73 +1,70 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using DomainLayer.DTO.AuthDtos;
-using DomainLayer.Models;
-using IdentityServer4.Services;
+﻿using BookLibrary.Domain.Core.DTO.AuthDTOs;
+using BookLibrary.Domain.Core.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.IdentityModel.Tokens;
 
-namespace WebAPI_Layer.Controllers
+namespace BookLibrary.Controllers
 {
+#pragma warning disable CA2254
     [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IIdentityServerInteractionService _interactionService;
-        private ILogger<AuthController> _logger;
+        private readonly ILogger<AuthController> _logger;
         private readonly IConfiguration _configuration;
 
-        public AuthController(SignInManager<ApplicationUser> signInManager, 
-            UserManager<ApplicationUser> userManager, 
-            IIdentityServerInteractionService interactionService, 
+        public AuthController(SignInManager<ApplicationUser> signInManager,
+            UserManager<ApplicationUser> userManager,
             ILogger<AuthController> logger,
             IConfiguration configuration)
         {
             _signInManager = signInManager;
             _userManager = userManager;
-            _interactionService = interactionService;
             _logger = logger;
             _configuration = configuration;
         }
 
         [HttpPost]
-        [Route("Login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto model)
+        [Route("LoginAsync")]
+        public async Task<IActionResult> LoginAsync([FromBody] LoginDto model)
         {
             var user = await _userManager.FindByNameAsync(model.Email);
 
-            if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
+            if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
             {
-                var authClaims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, user.UserName),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-                };
-
-                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"]));
-
-                var token = new JwtSecurityToken(
-                    issuer: _configuration["JWT:ValidIssuer"],
-                    audience: _configuration["JWT:ValidAudience"],
-                    expires: DateTime.Now.AddHours(3),
-                    claims: authClaims,
-                    signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-                );
-
-                _logger.LogDebug($"Новый пользователь {user.FirstName} {user.LastName} успешно зарегистрирован.");
-                return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token), expiration = token.ValidTo });
-
+                _logger.LogError("An authorization error has occurred!");
+                return Unauthorized();
             }
-            _logger.LogError("Произошла ошибка авторизации!");
-            return Unauthorized();
+
+            var authClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"]));
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["JWT:ValidIssuer"],
+                audience: _configuration["JWT:ValidAudience"],
+                expires: DateTime.Now.AddHours(3),
+                claims: authClaims,
+                signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+            );
+
+            _logger.LogDebug($"New user {user.FirstName} {user.LastName} registered successfully.");
+            return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token), expiration = token.ValidTo });
         }
 
         [HttpPost]
-        [Route("Register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDto model)
+        [Route("RegisterAsync")]
+        public async Task<IActionResult> RegisterAsync([FromBody] RegisterDto model)
         {
             var user = new ApplicationUser
             {
@@ -82,23 +79,13 @@ namespace WebAPI_Layer.Controllers
 
             if (!result.Succeeded)
             {
-                _logger.LogError($"Ошибка: Error occurred");
-                return StatusCode(400, $"Ошибка: Error occurred");
+                _logger.LogError($"Error: Error occurred");
+                return BadRequest($"Error: Error occurred");
             }
 
             await _signInManager.SignInAsync(user, false);
 
-            return StatusCode(200, model);
+            return Ok(model);
         }
-
-        //[HttpGet]
-        //public async Task<IActionResult> Logout(string logoutId)
-        //{
-        //    await _signInManager.SignOutAsync();
-
-        //    var logoutRequest = await _interactionService.GetLogoutContextAsync(logoutId);
-
-        //    return Redirect(logoutRequest.PostLogoutRedirectUri);
-        //}
     }
 }

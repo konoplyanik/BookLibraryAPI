@@ -1,4 +1,4 @@
-﻿namespace RepositoryLayer
+﻿namespace BookLibrary.Infrastructure.Data
 {
     public class DbInitializer
     {

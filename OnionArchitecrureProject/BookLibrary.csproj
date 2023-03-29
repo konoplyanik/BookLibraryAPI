@@ -4,8 +4,7 @@
     <TargetFramework>net7.0</TargetFramework>
 	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
 	  <NoWarn>$(NoWarn);1591</NoWarn>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
+	  <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,7 +24,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ServiceLayer\ServiceLayer.csproj" />
+    <ProjectReference Include="..\Domain.Interfaces\BookLibrary.Domain.Interfaces.csproj" />
+    <ProjectReference Include="..\DomainLayer\BookLibrary.Domain.Core.csproj" />
+    <ProjectReference Include="..\Infrastructure.Business\BookLibrary.Infrastructure.Business.csproj" />
+    <ProjectReference Include="..\RepositoryLayer\BookLibrary.Infrastructure.Data.csproj" />
+    <ProjectReference Include="..\ServiceLayer\BookLibrary.Services.Interfaces.csproj" />
   </ItemGroup>
 
 </Project>

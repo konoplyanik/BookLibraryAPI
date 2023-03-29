@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DomainLayer.DTO.UserDtos
+﻿namespace BookLibrary.Domain.Core.DTO.UserDTOs
 {
     public class GetUserDto
     {

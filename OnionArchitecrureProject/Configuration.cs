@@ -2,9 +2,9 @@
 using IdentityServer4;
 using IdentityServer4.Models;
 
-namespace WebAPI_Layer
+namespace BookLibrary
 {
-    // Данный класс содержит информацию о клиентах и ресурсах
+    // This class contains information about clients and resources
     public static class Configuration
     {
         public static IEnumerable<ApiScope> ApiScopes =>

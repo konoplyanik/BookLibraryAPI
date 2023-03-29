@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
-using DomainLayer.DTO.BookDtos;
-using DomainLayer.DTO.OrderDtos;
-using DomainLayer.DTO.UserDtos;
-using DomainLayer.Models;
+using BookLibrary.Domain.Core.DTO.BookDTOs;
+using BookLibrary.Domain.Core.DTO.OrderDTOs;
+using BookLibrary.Domain.Core.DTO.UserDTOs;
+using BookLibrary.Domain.Core.Models;
 
-namespace WebAPI_Layer
+namespace BookLibrary
 {
     public class MappingProfile : Profile
     {
