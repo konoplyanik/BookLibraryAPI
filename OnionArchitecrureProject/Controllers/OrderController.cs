@@ -39,7 +39,7 @@ namespace BookLibrary.Controllers
 
         [HttpGet]
         [Route("Get")]
-        public async Task<IActionResult> GetOrderAsync(int id)
+        public async Task<IActionResult> GetOrderAsync([FromQuery] int id)
         {
             var response = await _orderService.GetOrderAsync(id);
 
@@ -54,7 +54,7 @@ namespace BookLibrary.Controllers
         }
 
         [HttpPost("Add")]
-        public async Task<IActionResult> AddOrderAsync(AddOrderDto order)
+        public async Task<IActionResult> AddOrderAsync([FromBody] AddOrderDto order)
         {
             var response = await _orderService.AddOrderAsync(order);
 

@@ -29,39 +29,16 @@ namespace BookLibrary.Infrastructure.Data.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task UpdateBook(Book book)
+        public async Task UpdateBookAsync(Book book)
         {
-            var bookValue = await _dbContext.Books.FindAsync(book.BookId);
-            if (bookValue == null)
-            {
-                // ....
-            }
-            bookValue.Title = book.Title;
-            bookValue.Author = book.Author;
-            bookValue.Price = book.Price;
-            _dbContext.Books.Update(bookValue);
+            _dbContext.Books.Update(book);
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task RemoveBook(long id)
+        public async Task RemoveBookAsync(Book book)
         {
-            var book = await _dbContext.Books.Where(b => b.BookId == id).FirstOrDefaultAsync();
-            if (book == null)
-            {
-                //...
-            }
             _dbContext.Books.Remove(book);
             await _dbContext.SaveChangesAsync();
-        }
-
-        public bool CheckForExistedBook(string title)
-        {
-            if (title == null)
-            {
-                // ...
-            }
-
-            return _dbContext.Books.Any(b => b.Title == title);
         }
     }
 }

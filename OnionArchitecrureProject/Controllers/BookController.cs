@@ -37,7 +37,7 @@ namespace BookLibrary.Controllers
 
         [HttpGet]
         [Route("Get")]
-        public async Task<IActionResult> GetBookAsync(int id)
+        public async Task<IActionResult> GetBookAsync([FromQuery] int id)
         {
             var response = await _bookService.GetBookAsync(id);
 
@@ -52,7 +52,7 @@ namespace BookLibrary.Controllers
         }
 
         [HttpPost("Add")]
-        public async Task<IActionResult> AddBookAsync(AddBookDto book)
+        public async Task<IActionResult> AddBookAsync([FromBody] AddBookDto book)
         {
             var response = await _bookService.AddBookAsync(book);
 
@@ -67,7 +67,7 @@ namespace BookLibrary.Controllers
         }
 
         [HttpPut("Edit")]
-        public async Task<IActionResult> UpdateBookAsync(EditBookDto book)
+        public async Task<IActionResult> UpdateBookAsync([FromBody] EditBookDto book)
         {
             var response = await _bookService.UpdateBookAsync(book);
 
@@ -82,7 +82,7 @@ namespace BookLibrary.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> DeleteBookAsync(long id)
+        public async Task<IActionResult> DeleteBookAsync([FromQuery] long id)
         {
             var response = await _bookService.RemoveBookAsync(id);
 

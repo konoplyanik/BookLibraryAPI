@@ -43,7 +43,7 @@ namespace BookLibrary.Controllers
 
         [HttpGet]
         [Route("Get")]
-        public async Task<IActionResult> GetUserAsync(string email)
+        public async Task<IActionResult> GetUserAsync([FromQuery] string email)
         {
             var user = await _userManager.FindByEmailAsync(email);
 
@@ -79,7 +79,7 @@ namespace BookLibrary.Controllers
         }
 
         [HttpDelete("Delete")]
-        public async Task<IActionResult> DeleteUserAsync(string email)
+        public async Task<IActionResult> DeleteUserAsync([FromQuery] string email)
         {
             ApplicationUser applicationUser = await _userManager.FindByEmailAsync(email);
             if (applicationUser == null)

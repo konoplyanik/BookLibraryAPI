@@ -69,10 +69,9 @@ namespace BookLibrary.Infrastructure.Business.Books
 
         public async Task<BaseResponse> UpdateBookAsync(EditBookDto book)
         {
-
             var editBook = _mapper.Map<EditBookDto, Book>(book);
 
-            await _bookRepository.UpdateBook(editBook);
+            await _bookRepository.UpdateBookAsync(editBook);
 
             _logger.LogDebug($"Book info: {book.Title} changed successfully.");
 
@@ -90,7 +89,7 @@ namespace BookLibrary.Infrastructure.Business.Books
 
             }
 
-            await _bookRepository.RemoveBook(id);
+            await _bookRepository.RemoveBookAsync(book);
 
             _logger.LogDebug($"Book: {book.Title} successfully removed from library.");
 

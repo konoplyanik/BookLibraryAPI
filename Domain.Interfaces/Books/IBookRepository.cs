@@ -7,8 +7,7 @@ namespace BookLibrary.Domain.Interfaces.Books
         Task <IEnumerable<Book>> GetAllBooksAsync();
         Task<Book> GetBookAsync(long id);
         Task AddBookAsync(Book book);
-        Task UpdateBook(Book book);
-        Task RemoveBook(long id);
-        bool CheckForExistedBook(string title);
+        Task UpdateBookAsync(Book book);
+        Task RemoveBookAsync(Book book);
     }
 }
